@@ -5,37 +5,40 @@ pymmaster.mmaster_tools provides most of the routines used for removing jitter-r
 .. _MicMac ASTER: https://www.mdpi.com/2072-4292/9/7/704
 """
 from __future__ import print_function
+
+import errno
+import os
+import shutil
+import sys
+import time
+import zipfile
 # from future_builtins import zip
 from functools import partial
-import os
-import sys
 from glob import glob
-import errno
-import pyproj
-import numpy as np
-import numpy.polynomial.polynomial as poly
-from osgeo import ogr, gdal
+
 import fiona
 import fiona.crs
 import matplotlib.pylab as plt
+import numpy as np
+import numpy.polynomial.polynomial as poly
 import pandas as pd
+import pyproj
 import scipy.optimize as optimize
-import time
-import zipfile
-import shutil
-from skimage.morphology import disk
-from scipy.ndimage.morphology import binary_opening, binary_dilation
-from scipy.ndimage.filters import median_filter
 from matplotlib.backends.backend_pdf import PdfPages
-from shapely.geometry.polygon import Polygon, orient
-from shapely.geometry import mapping, LineString, Point
-from shapely.ops import cascaded_union, transform
-from pybob.coreg_tools import dem_coregistration, false_hillshade, get_slope, create_stable_mask, RMSE
+from mpl_toolkits.axes_grid1 import make_axes_locatable
+from osgeo import gdal, ogr
+from pybob.bob_tools import mkdir_p
+from pybob.coreg_tools import (RMSE, create_stable_mask, dem_coregistration,
+                               false_hillshade, get_slope)
 from pybob.GeoImg import GeoImg
 from pybob.image_tools import nanmedian_filter
 from pybob.plot_tools import plot_shaded_dem
-from pybob.bob_tools import mkdir_p
-from mpl_toolkits.axes_grid1 import make_axes_locatable
+from scipy.ndimage.filters import median_filter
+from scipy.ndimage.morphology import binary_dilation, binary_opening
+from shapely.geometry import LineString, Point, mapping
+from shapely.geometry.polygon import Polygon, orient
+from shapely.ops import transform, unary_union
+from skimage.morphology import disk
 
 
 def extract_file_from_zip(fn_zip_in, filename_in, fn_file_out):
@@ -230,7 +233,7 @@ def get_aster_footprint(gran_name, proj4='+units=m +init=epsg:4326', indir=None,
         coords = list(zip(lons, lats))
         footprints.append(Polygon(coords))
 
-    footprint = cascaded_union(footprints)
+    footprint = unary_union(footprints)
     footprint = footprint.simplify(0.0001)
     outprint = reproject_geometry(footprint, {'init': 'epsg:4326'}, proj4)
     if polyout:
@@ -1001,8 +1004,8 @@ def get_filtered_along_track(mst_dem, slv_dem, ang_maps, pts):
     # create mask for dh and xx values    
     myix = np.isin(xxid, grp_xx[psize < pthresh], invert=True).flatten()
     # mask group values
-    grp_dH = np.delete(grp_dH, [psize < pthresh])
-    grp_xx = np.delete(grp_xx, [psize < pthresh])
+    grp_dH = np.delete(grp_dH, psize < pthresh)
+    grp_xx = np.delete(grp_xx, psize < pthresh)
     # # # # # # # # # # #
 
     yy = dH
