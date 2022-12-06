@@ -4,7 +4,8 @@ This repository hosts the workflows for the MMASTER procesing methods of ASTER-L
 
 Documentation on readthe docs : https://mmaster-workflows.readthedocs.io/en/latest/index.html
 
-Revised Installation Instructions.
+**Revised Installation Instructions.**
+
 MicMac and PyMMaster can now be installed in the same conda environment as follows. For actual usage consult the readthedocs above.
 
 Create the conda environment, this may take a few minutes to solve.
